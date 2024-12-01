@@ -2,6 +2,7 @@ import streamlit as st
 from sentence_transformers import SentenceTransformer
 import faiss
 import pickle
+import numpy as np
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
@@ -13,8 +14,19 @@ def load_data(filepath='chatbot_data.pkl'):
 
 # Fungsi chatbot
 def chatbot(queries, index, sentence_model, sentences, summaries, top_k=3):
+    # Encode queries menjadi embeddings
     query_embeddings = sentence_model.encode(queries)
-    D, I = index.search(query_embeddings, k=top_k)
+
+    # Pastikan embeddings berbentuk 2D
+    if len(query_embeddings.shape) == 1:
+        query_embeddings = np.expand_dims(query_embeddings, axis=0)
+
+    # FAISS search
+    try:
+        D, I = index.search(query_embeddings, k=top_k)  # Melakukan pencarian di FAISS index
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat pencarian FAISS: {e}")
+        return [f"Kesalahan saat memproses pertanyaan '{query}'." for query in queries]
 
     responses = []
     for query, indices in zip(queries, I):
@@ -56,7 +68,7 @@ def main():
         index, sentence_model, sentences, summaries = load_data(data_path)
         st.sidebar.success("Data berhasil dimuat.")
     except Exception as e:
-        st.sidebar.error("Gagal memuat data.")
+        st.sidebar.error(f"Gagal memuat data: {e}")
         st.stop()
 
     # Input pertanyaan pengguna
