@@ -17,11 +17,12 @@ def download_file_from_github(url, save_path):
         return False
 
 # Fungsi untuk memuat data
-def load_data(filepath='chatbot_data.pkl'):
-    # Memastikan file ada, jika tidak, unduh dari GitHub
+def load_data(filepath='chatbot_data.pkl', github_url=None):
+    # Memastikan file ada, jika tidak, unduh dari GitHub jika URL disediakan
     if not os.path.exists(filepath):
-        # Gantilah dengan URL raw GitHub yang sesuai
-        github_url = "https://raw.githubusercontent.com/irfan2622/AI/main/chatbot_data.pkl"
+        if github_url is None:
+            raise ValueError("URL GitHub tidak disediakan dan file tidak ditemukan.")
+        
         success = download_file_from_github(github_url, filepath)
         if not success:
             raise FileNotFoundError("Gagal mengunduh file dari GitHub.")
@@ -85,12 +86,15 @@ def main():
     st.title("Chatbot AI")
     st.write("Interaksi dengan dokumen Anda menggunakan AI.")
 
-    # Memuat data chatbot
+    # Memasukkan URL file dari GitHub
     st.sidebar.title("Konfigurasi")
-    data_path = st.sidebar.text_input("Path ke file data (chatbot_data.pkl)", "chatbot_data.pkl")
+    github_url = st.sidebar.text_input("Masukkan URL raw GitHub untuk file data (chatbot_data.pkl):")
+
+    # Path file yang akan digunakan
+    data_path = 'chatbot_data.pkl'
 
     try:
-        index, sentence_model, sentences, summaries = load_data(data_path)
+        index, sentence_model, sentences, summaries = load_data(data_path, github_url)
         st.sidebar.success("Data berhasil dimuat.")
     except Exception as e:
         st.sidebar.error(f"Gagal memuat data: {e}")
