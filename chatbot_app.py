@@ -25,10 +25,17 @@ def load_data(filepath='chatbot_data.pkl'):
         success = download_file_from_github(github_url, filepath)
         if not success:
             raise FileNotFoundError("Gagal mengunduh file dari GitHub.")
-    
-    with open(filepath, 'rb') as f:
-        index, sentence_model, sentences, summaries = pickle.load(f)
-    return index, sentence_model, sentences, summaries
+        
+        # Verifikasi ukuran file setelah diunduh
+        if os.path.getsize(filepath) == 0:
+            raise FileNotFoundError("File yang diunduh kosong.")
+
+    try:
+        with open(filepath, 'rb') as f:
+            index, sentence_model, sentences, summaries = pickle.load(f)
+        return index, sentence_model, sentences, summaries
+    except Exception as e:
+        raise Exception(f"Gagal memuat data dari file: {e}")
 
 # Fungsi chatbot
 def chatbot(queries, index, sentence_model, sentences, summaries, top_k=3):
