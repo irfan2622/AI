@@ -3,11 +3,29 @@ from sentence_transformers import SentenceTransformer
 import faiss
 import pickle
 import numpy as np
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
+import requests
+import os
+
+# Fungsi untuk mengunduh file dari GitHub
+def download_file_from_github(url, save_path):
+    response = requests.get(url)
+    if response.status_code == 200:
+        with open(save_path, 'wb') as f:
+            f.write(response.content)
+        return True
+    else:
+        return False
 
 # Fungsi untuk memuat data
 def load_data(filepath='chatbot_data.pkl'):
+    # Memastikan file ada, jika tidak, unduh dari GitHub
+    if not os.path.exists(filepath):
+        # Gantilah dengan URL raw GitHub yang sesuai
+        github_url = "https://raw.githubusercontent.com/username/repository/branch/path/to/chatbot_data.pkl"
+        success = download_file_from_github(github_url, filepath)
+        if not success:
+            raise FileNotFoundError("Gagal mengunduh file dari GitHub.")
+    
     with open(filepath, 'rb') as f:
         index, sentence_model, sentences, summaries = pickle.load(f)
     return index, sentence_model, sentences, summaries
