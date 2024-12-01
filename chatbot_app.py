@@ -17,26 +17,18 @@ def download_file_from_github(url, save_path):
         return False
 
 # Fungsi untuk memuat data
-def load_data(filepath='chatbot_data.pkl', github_url=None):
-    # Memastikan file ada, jika tidak, unduh dari GitHub jika URL disediakan
+def load_data(filepath='chatbot_data.pkl'):
+    # Memastikan file ada, jika tidak, unduh dari GitHub
     if not os.path.exists(filepath):
-        if github_url is None:
-            raise ValueError("URL GitHub tidak disediakan dan file tidak ditemukan.")
-        
+        # Gantilah dengan URL raw GitHub yang sesuai
+        github_url = "https://raw.githubusercontent.com/irfan2622/AI/main/chatbot_data.pkl"
         success = download_file_from_github(github_url, filepath)
         if not success:
             raise FileNotFoundError("Gagal mengunduh file dari GitHub.")
-        
-        # Verifikasi ukuran file setelah diunduh
-        if os.path.getsize(filepath) == 0:
-            raise FileNotFoundError("File yang diunduh kosong.")
-
-    try:
-        with open(filepath, 'rb') as f:
-            index, sentence_model, sentences, summaries = pickle.load(f)
-        return index, sentence_model, sentences, summaries
-    except Exception as e:
-        raise Exception(f"Gagal memuat data dari file: {e}")
+    
+    with open(filepath, 'rb') as f:
+        index, sentence_model, sentences, summaries = pickle.load(f)
+    return index, sentence_model, sentences, summaries
 
 # Fungsi chatbot
 def chatbot(queries, index, sentence_model, sentences, summaries, top_k=3):
@@ -49,7 +41,7 @@ def chatbot(queries, index, sentence_model, sentences, summaries, top_k=3):
 
     # FAISS search
     try:
-        D, I = index.search(query_embeddings, k=top_k)  # Melakukan pencarian di FAISS index
+        D, I = index.search(query_embeddings, top_k)  # Melakukan pencarian di FAISS index
     except Exception as e:
         st.error(f"Terjadi kesalahan saat pencarian FAISS: {e}")
         return [f"Kesalahan saat memproses pertanyaan '{query}'." for query in queries]
@@ -86,15 +78,12 @@ def main():
     st.title("Chatbot AI")
     st.write("Interaksi dengan dokumen Anda menggunakan AI.")
 
-    # Memasukkan URL file dari GitHub
+    # Memuat data chatbot
     st.sidebar.title("Konfigurasi")
-    github_url = st.sidebar.text_input("Masukkan URL raw GitHub untuk file data (chatbot_data.pkl):")
-
-    # Path file yang akan digunakan
-    data_path = 'chatbot_data.pkl'
+    data_path = st.sidebar.text_input("Path ke file data (chatbot_data.pkl)", "chatbot_data.pkl")
 
     try:
-        index, sentence_model, sentences, summaries = load_data(data_path, github_url)
+        index, sentence_model, sentences, summaries = load_data(data_path)
         st.sidebar.success("Data berhasil dimuat.")
     except Exception as e:
         st.sidebar.error(f"Gagal memuat data: {e}")
