@@ -28,6 +28,10 @@ def load_data(filepath='chatbot_data.pkl'):
     
     with open(filepath, 'rb') as f:
         index, sentence_model, sentences, summaries = pickle.load(f)
+
+    # Validasi FAISS index
+    if not isinstance(index, faiss.IndexFlat):
+        raise ValueError("FAISS index tidak valid. Harap pastikan file chatbot_data.pkl benar.")
     return index, sentence_model, sentences, summaries
 
 # Fungsi chatbot
@@ -41,7 +45,8 @@ def chatbot(queries, index, sentence_model, sentences, summaries, top_k=3):
 
     # FAISS search
     try:
-        D, I = index.search(query_embeddings, top_k)  # Melakukan pencarian di FAISS index
+        # Pastikan jumlah query sesuai dengan dimensi
+        D, I = index.search(query_embeddings.astype('float32'), top_k)  # Melakukan pencarian di FAISS index
     except Exception as e:
         st.error(f"Terjadi kesalahan saat pencarian FAISS: {e}")
         return [f"Kesalahan saat memproses pertanyaan '{query}'." for query in queries]
