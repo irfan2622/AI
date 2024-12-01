@@ -21,7 +21,7 @@ def load_data(filepath='chatbot_data.pkl'):
     # Memastikan file ada, jika tidak, unduh dari GitHub
     if not os.path.exists(filepath):
         # Gantilah dengan URL raw GitHub yang sesuai
-        github_url = "https://github.com/irfan2622/AI/blob/main/chatbot_data.pkl"
+        github_url = "chatbot_data.pkl"
         success = download_file_from_github(github_url, filepath)
         if not success:
             raise FileNotFoundError("Gagal mengunduh file dari GitHub.")
